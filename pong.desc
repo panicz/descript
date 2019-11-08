@@ -1,0 +1,18 @@
+Pong is a video game for two players.
+Each player controls a paddle, which is
+a rather thin and wide white rectangle.
+The paddles are located on the opposite
+sides of the screen and can move either
+up or down.
+There is a ball, which is a small white
+square. The ball moves from the middle
+of the screen in a random direction.
+When it hits the top or bottom edge of
+the screen, it bounces off. When it
+hits the side of the screen behind
+player's paddle, the other player gains
+a point, and the ball starts its movement
+over from the middle of the screen.
+
+Run Pong.
+
