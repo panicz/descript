@@ -1,5 +1,11 @@
-(require-extension matchable)
-[require-extension srfi-69] ;; hash-table
+(cond-expand
+  (guile
+   (use-modules (ice-9 match) (srfi srfi-69)))
+
+  
+ (chicken 
+  (require-extension matchable)
+  [require-extension srfi-69]))
 
 (define-syntax infix/postfix
   (syntax-rules ()
@@ -106,23 +112,82 @@
     [[define+ [name . args] . body]
      [define name [fn+ args . body]]]]]
 
+(define-syntax e.g.
+  (syntax-rules (===>)
+    ((_ expression ===> value)
+     (let ((result expression))
+       (unless (equal? result 'value)
+	 (error 'expression ": expected "'value", got "result))))
+    ((_ expression)
+     (unless expression
+       (error 'expression " does not hold")))))
+
 (define (map1 f l)
   [match l
     ['[] '[]]
     [`[,h . ,t]
      `[,[f h] . ,[map1 f t]]]])
 
-(define (map f l . ls)
-  (match l
-    ['[] '[]]
-    [`[,h . ,t]
-     `[,[apply f h
-	       [map1 [fn [`[,h* . ,_]]
-			 h]
-		     ls]]
-       . ,[apply map f t [map1 [fn [`[,_ . ,t*]]
-				   t*]
-				ls]]]]))
+(cond-expand
+ (chicken
+  (define (map f l . ls)
+    (match l
+      ['[] '[]]
+      [`[,h . ,t]
+       `[,[apply f h
+		 [map1 [fn [`[,h* . ,_]]
+			   h]
+		       ls]]
+	 . ,[apply map f t [map1 [fn [`[,_ . ,t*]]
+				     t*]
+				 ls]]]]))
+
+
+  (define (string-join los glue)
+    (match los
+      (`(,s . ,l)
+       (foldl (fn (a b)
+		  (string-append a glue b))
+	      s l))
+      (_ "")))
+
+  (e.g.
+   (string-join '("a" "b" "c") ",")
+   ===> "a,b,c")
+  
+  )
+ (guile
+  (define-syntax-rule (assert condition)
+    (let ((result condition))
+      (unless result
+	(error "Assertion failed: "'condition))))
+  
+   (define (print . args)
+     (for-each display args)
+     (newline))
+   
+   ))
+
+(define (break-string string break)
+  (let ((n (string-length break)))
+    (if (= n 0)
+	'()
+	(let ((index (string-contains string break)))
+	  (if index
+	      `(,(substring string 0 index)
+		. ,(break-string (substring string
+					    (+ index n))
+				 break))
+	      `(,string))))))
+
+
+(define (string-substitute pattern #;with replacement #;in string)
+  (string-join
+   (break-string string pattern)
+   replacement))
+
+(e.g.
+ (string-substitute "," ";" "a,b,c") ===> "a;b;c")
 
 (define (append-map f l)
   (match l
@@ -172,16 +237,3 @@
 (define (writeln . text)
   (for-each write text)
   (newline))
-
-(define (string-join los glue)
-  (match los
-    (`(,s . ,l)
-     (foldl (fn (a b)
-		(string-append a glue b))
-	    s l))
-    (_ "")))
-
-(define (string-replace pat subst str)
-  (string-join
-   (string-split str pat)
-   subst))

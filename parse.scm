@@ -1,4 +1,4 @@
-[load "prelude.scm"]
+[include "prelude.scm"]
 
 (define (parse input
                grammar 
@@ -53,7 +53,7 @@
             (matches/rule rule*
 			  words)))
      '()))
-  
+
   (define (recognizes? terminal word)
     (assert (string? word))
     (or (and (string? terminal)
@@ -149,15 +149,15 @@
 
 (define (sentences text)
   (map (fn (s)
-	   (string-replace
-	    "," " , "
-	    (string-append s " .")))
-       (only (isnt _ equal? "")
-	     (string-split text "."))))
+	   (string-substitute
+	    "," #;with " , "
+	    #;in (string-append s " .")))
+       (only (fn(x)(isnt x equal? ""))
+	     (break-string text "."))))
 
 (define (words sentence)
-  (only (isnt _ equal? "")
-	(string-split sentence " ")))
+  (only (fn(x)(isnt x equal? ""))
+	(break-string sentence " ")))
 
 
 #|
@@ -361,10 +361,7 @@
 
 (preview1 "Pong is a video game for two players")
 
-
-
 ;;    2. stworzenie dwóch obiektów graczy i paletek dla nich
-
 
 (set! grammar1
   `(,@(language-spec
@@ -427,4 +424,6 @@
 
 (preview "when it hits the top or bottom edge of the screen , it bounces off")
 
+#|
 ("when it hits the side of the screen behind player 's paddle , the other player gains a point , and the ball starts its movement over from the middle of the screen"
+|#
