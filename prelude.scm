@@ -1,11 +1,14 @@
 (cond-expand
   (guile
-   (use-modules (ice-9 match) (srfi srfi-69)))
+   (use-modules
+    (srfi srfi-1)
+    (ice-9 match)
+    (srfi srfi-69)))
 
-  
- (chicken 
-  (require-extension matchable)
-  [require-extension srfi-69]))
+    (chicken
+   [require-extension srfi-1]
+   (require-extension matchable)
+   [require-extension srfi-69]))
 
 (define-syntax infix/postfix
   (syntax-rules ()
@@ -117,7 +120,9 @@
     ((_ expression ===> value)
      (let ((result expression))
        (unless (equal? result 'value)
-	 (error 'expression ": expected "'value", got "result))))
+	 (error 'expression
+		": expected "'value
+		", got "result))))
     ((_ expression)
      (unless expression
        (error 'expression " does not hold")))))
@@ -154,6 +159,8 @@
   (e.g.
    (string-join '("a" "b" "c") ",")
    ===> "a,b,c")
+
+  (define break-string string-split)
   
   )
  (guile
@@ -161,27 +168,33 @@
     (let ((result condition))
       (unless result
 	(error "Assertion failed: "'condition))))
-  
+
+
+  (define (break-string string break)
+    (let ((n (string-length break)))
+      (if (= n 0)
+	  '()
+	  (let ((index (string-contains string break)))
+	    (if index
+		`(,(substring string 0 index)
+		  . ,(break-string (substring
+				    string
+				    (+ index n))
+				   break))
+		`(,string))))))
+
    (define (print . args)
      (for-each display args)
      (newline))
    
    ))
 
-(define (break-string string break)
-  (let ((n (string-length break)))
-    (if (= n 0)
-	'()
-	(let ((index (string-contains string break)))
-	  (if index
-	      `(,(substring string 0 index)
-		. ,(break-string (substring string
-					    (+ index n))
-				 break))
-	      `(,string))))))
+(define (none satisfying? elements)
+  (not (any satisfying? elements)))
 
-
-(define (string-substitute pattern #;with replacement #;in string)
+(define (string-substitute pattern
+			   #;with replacement
+				  #;in string)
   (string-join
    (break-string string pattern)
    replacement))
