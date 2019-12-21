@@ -1,17 +1,9 @@
-#|
-"pong is a video game for two players"
 
-"each player controls a paddle, which is
-a rather thin and wide white rectangle"
-===>
-"a paddle is a rather thin and wide white rectangle"
-"each player controls a paddle"
-
-		   
-|#
 
 [include "parse.scm"]
 [include "maps.scm"]
+[require-extension srfi-113]
+[require-extension srfi-128]
 
 (define (listify x)
   (if x `(,x) '()))
@@ -21,7 +13,19 @@ a rather thin and wide white rectangle"
     ,@(map-ref description qualities: '())
     ,(map-ref description stem:)))
 
-(define description? map?)
+(define (description? x)
+  (and (map? x)
+       (eq? (map-ref x type:) 'description)))
+
+(define (description . attributes)
+  (apply persistent-map
+	 type: 'description
+	 attributes))
+
+(define (predicate . attributes)
+  (apply persistent-map
+	 type: 'predicate
+	 attributes))
 
 (define (subordinate-clauses description)
   (let ((subordinate (map-ref description
@@ -32,18 +36,15 @@ a rather thin and wide white rectangle"
 	  `(,@(append-map subordinate-clauses
 			  subordinate-descriptions)
 	    (,@(stem description)
-	     ,@(append-map (fn (x)
-			(cond
-			 ((description? x)
-			  (stem x))
-			 (else ;(list? x)
-			  `(,x))
-			 #;(else
-			 `(,x))))
-		    subordinate))))
+	     ,@(append-map
+		(fn (x)
+		    (if (description? x)
+			(stem x)
+			`(,x)))
+		subordinate))))
 	'())))
 
-(define clause-expansion
+(define subordinate-clause-expansion
   (language-spec
    (<sentence> ::= (<subject> <verb> <object>)
 	       `(,@(subordinate-clauses <subject>)
@@ -51,31 +52,32 @@ a rather thin and wide white rectangle"
 		 (,@(stem <subject>)
 		  ,<verb>
 		  ,@(stem <object>))))
-
+   
    (<sentence> ::= (there is <object>)
 	       `(,@(subordinate-clauses <object>)
 		 (,there ,is ,@(stem <object>))))
-
    (<object> ::= <noun>
-	     (~ stem: <noun>))
+	     (description stem: <noun>))
 
    (<subject> ::= <object>)
 
    (<object> ::= (a <noun>)
-	     (~ stem: <noun>
-		qualifier: a))
+	     (description
+	      stem: <noun>
+	      qualifier: a))
    
    (<object> ::= (a <qualities> <noun>)
-	     (~ stem: <noun>
-		qualifier: a
-		qualities: <qualities>))
+	     (description
+	      stem: <noun>
+	      qualifier: a
+	      qualities: <qualities>))
 
    (<object> ::= (<subject> "," which <verb> <object>)
 	     (join <subject>
-		   (~ subordinate:
-		      `(,<verb> ,<object>))))
+		   (description
+		    subordinate: `(,<verb> ,<object>))))
    
-   (<qualities> ::= <quality> `(,<quality>))
+   (<qualities> ::= (<quality>))
    (<quality> ::= (rather <quality>) <quality>)
    (<qualities> ::= (<quality> <qualities>)
 		`(,<quality> . ,<qualities>))
@@ -85,42 +87,96 @@ a rather thin and wide white rectangle"
    (& ::= ",")
    (rather ::= "rather")
    (rather ::= "quite")
+   (rather ::= "fairly")
+   
    (there ::= "there")
    (which ::= "which")
    (is ::= "is")
    (a ::= "a")
    (a ::= "an")
    (a ::= "each")
-   (<verb> ::= "is" )
+   (<verb> ::= "is")
    (<verb> ::= "controls")
    (<quality> ::= "white")
    (<quality> ::= "thin")
    (<quality> ::= "wide")
    (<quality> ::= "small")
-   #|
-   (<noun> ::= "player")
-   (<noun> ::= "paddle")
-   (<noun> ::= "rectangle")
-   (<noun> ::= "square")
-   (<noun> ::= "ball")
-   |#
+   (<quality> ::= "opposite")
    (<noun> ::= ,(fn _ #t))
    ))
 
-#|
+"the paddles are located on the opposite sides of the screen and can move either up or down"
 
-(define (preview sentence)
+(define multiple-predicate-expansion
+  (language-spec
+   (<sentence> ::= (<subject> <predicates>)
+	       (map (fn (<predicate>)
+			`(,<subject> . ,<predicate>))
+		    <predicates>))
+   (<subject> ::= <object>)
+
+   (<object> ::= (<noun>))
+   
+   (<object> ::= (a <noun>))
+   
+   (<object> ::= (a <qualities> <noun>))
+
+   (<object> ::= (both <object> & <object>))
+
+   (<object> ::= (<subject> "of" <object>))
+   
+   (<qualities> ::= (<quality>))
+   (<quality> ::= (rather <quality>) <quality>)
+   (<qualities> ::= (<quality> <qualities>)
+		`(,<quality> . ,<qualities>))
+   (<qualities> ::= (<quality> & <qualities>)
+		`(,<quality> . ,<qualities>))
+   (<predicates> ::= (<predicate>))
+   (<predicates> ::= (<predicate> & <predicates>)
+		 `(,<predicate> . ,<predicates>))
+   (<predicate> ::= (be <participle> <locative>))
+   (a ::= "a")
+   (a ::= "an")
+   (a ::= "the")
+
+   (be ::= "is")
+   (be ::= "are")
+   (<locative> ::= (<preposition> <object>))
+   (<preposition> ::= "on")
+   (<participle> ::= "located")
+   (<noun> ::= ,(fn _ #t))
+   (& ::= "and")
+   (& ::= ",")
+   (& ::= "or")
+   (both ::= "both")
+   (both ::= "either")
+   (rather ::= "rather")
+   (rather ::= "quite")
+   (rather ::= "fairly")))
+
+
+(define equal-comparator
+  (make-equal-comparator))
+  
+(define (preview grammar sentence)
   (let ((words (words sentence)))
     (print sentence)
     (writeln
-     (parse
-      words
-      clause-expansion '<sentence>))
+     (set->list
+      (list->set
+       equal-comparator
+       (parse
+	words
+	grammar '<sentence>))))
     (newline)))
 
-(preview "each player controls a paddle , which is a rather thin and wide white rectangle")
+(preview
+ subordinate-clause-expansion
+ "each player controls a paddle , which is a rather thin and wide white rectangle")
 
+(preview
+ subordinate-clause-expansion
+ "there is a ball , which is a small white square")
 
-(preview "there is a ball , which is a small white square")
 (exit)
-|#
+

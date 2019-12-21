@@ -103,7 +103,7 @@
   (syntax-rules (unquote)
     ((_)
      '())
-
+    
     ((_ (<category> -> ,expression)
 	. <rest>)
      `((<category> -> (,expression)
@@ -128,14 +128,14 @@
 			  (`(,<structure> ...)
 			   <meaning>)))))
        . ,(language-spec . <rest>)))
-    
+    #|
     ((_ (<category> -> (<structure>))
 	. <rest>)
      `((<category> -> (<structure>)
 		   ,(fn (_ `(,<structure>))
 			    `(,<structure>)))
        . ,(language-spec . <rest>)))
-
+    |#
     ((_ (<category> -> (<structure> ...))
 	. <rest>)
      `((<category> -> (<structure> ...)

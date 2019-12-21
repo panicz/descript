@@ -31,10 +31,14 @@
 	(else
 	 `(,b ,a))))
 
+(define (coherent a b)
+  (if (eq? a b)
+      b
+      (error "incoherent values: "a", "b)))
+  
 (define (join a b)
  (parameterize ((merge-strategy
-		  (merge-maps
-		   throw-together)))
+		  (merge-maps coherent)))
     (merge a b)))
 
 (define (map-ref* m . keys)
