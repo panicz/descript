@@ -9,9 +9,9 @@
   (if x `(,x) '()))
 
 (define (stem description)
-  `(,@(listify (map-ref description qualifier:))
-    ,@(map-ref description qualities: '())
-    ,(map-ref description stem:)))
+  `(,@(listify (map-ref description #:qualifier))
+    ,@(map-ref description #:qualities '())
+    ,(map-ref description #:stem)))
 
 (define (description? x)
   (and (map? x)
@@ -19,17 +19,17 @@
 
 (define (description . attributes)
   (apply persistent-map
-	 type: 'description
+	 #:type 'description
 	 attributes))
 
 (define (predicate . attributes)
   (apply persistent-map
-	 type: 'predicate
+	 #:type 'predicate
 	 attributes))
 
 (define (subordinate-clauses description)
   (let ((subordinate (map-ref description
-			      subordinate:)))
+			      #:subordinate)))
     (if subordinate
 	(let ((subordinate-descriptions
 	       (only description? subordinate)))
@@ -57,25 +57,25 @@
 	       `(,@(subordinate-clauses <object>)
 		 (,there ,is ,@(stem <object>))))
    (<object> ::= <noun>
-	     (description stem: <noun>))
+	     (description #:stem <noun>))
 
    (<subject> ::= <object>)
 
    (<object> ::= (a <noun>)
 	     (description
-	      stem: <noun>
-	      qualifier: a))
+	      #:stem <noun>
+	      #:qualifier a))
    
    (<object> ::= (a <qualities> <noun>)
 	     (description
-	      stem: <noun>
-	      qualifier: a
-	      qualities: <qualities>))
+	      #:stem <noun>
+	      #:qualifier a
+	      #:qualities <qualities>))
 
    (<object> ::= (<subject> "," which <verb> <object>)
 	     (join <subject>
 		   (description
-		    subordinate: `(,<verb> ,<object>))))
+		    #:subordinate `(,<verb> ,<object>))))
    
    (<qualities> ::= (<quality>))
    (<quality> ::= (rather <quality>) <quality>)
@@ -142,6 +142,8 @@
    (be ::= "is")
    (be ::= "are")
    (<locative> ::= (<preposition> <object>))
+   (<direction> ::= "up")
+   (<direction> ::= "down")
    (<preposition> ::= "on")
    (<participle> ::= "located")
    (<noun> ::= ,(fn _ #t))
