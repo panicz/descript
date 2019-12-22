@@ -51,3 +51,5 @@
   (map-update-in m keys (lambda _ x)))
 
 (define bundle persistent-map)
+
+(define bundle? map?)
