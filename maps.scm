@@ -41,13 +41,13 @@
 		  (merge-maps coherent)))
     (merge a b)))
 
-(define (map-ref* m . keys)
-  (map-ref-in m keys))
+(define (property bundle . keys)
+  (map-ref-in bundle keys))
 
-(define (map-update* m f . keys)
+(define (updated-bundle m f . keys)
   (map-update-in m keys f))
 
-(define (map-add* m x . keys)
+(define (extended-bundle m x . keys)
   (map-update-in m keys (lambda _ x)))
 
-(define ~ persistent-map)
+(define bundle persistent-map)
