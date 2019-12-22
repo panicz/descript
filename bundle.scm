@@ -41,7 +41,10 @@
 		  (merge-maps coherent)))
     (merge a b)))
 
-(define (property bundle . keys)
+(define (property bundle key)
+  (map-ref bundle key))
+
+(define (property* bundle . keys)
   (map-ref-in bundle keys))
 
 (define (updated-bundle m f . keys)
