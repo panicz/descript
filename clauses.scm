@@ -9,27 +9,27 @@
   (if x `(,x) '()))
 
 (define (stem description)
-  `(,@(listify (map-ref description #:qualifier))
-    ,@(map-ref description #:qualities '())
-    ,(map-ref description #:stem)))
+  `(,@(listify (property description #:qualifier))
+    ,@(property description #:qualities '())
+    ,(property description #:stem)))
 
 (define (description? x)
-  (and (map? x)
-       (eq? (map-ref x type:) 'description)))
+  (and (bundle? x)
+       (eq? (property x type:) 'description)))
 
 (define (description . attributes)
-  (apply persistent-map
+  (apply bundle
 	 #:type 'description
 	 attributes))
 
 (define (predicate . attributes)
-  (apply persistent-map
+  (apply bundle
 	 #:type 'predicate
 	 attributes))
 
 (define (subordinate-clauses description)
-  (let ((subordinate (map-ref description
-			      #:subordinate)))
+  (let ((subordinate (property description
+			       #:subordinate)))
     (if subordinate
 	(let ((subordinate-descriptions
 	       (only description? subordinate)))
