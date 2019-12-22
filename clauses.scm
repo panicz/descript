@@ -10,7 +10,7 @@
 
 (define (stem description)
   `(,@(listify (property description #:qualifier))
-    ,@(property description #:qualities '())
+    ,@(or (property description #:qualities) '())
     ,(property description #:stem)))
 
 (define (description? x)
